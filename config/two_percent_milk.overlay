@@ -1,48 +1,60 @@
 // SPDX-License-Identifier: MIT
-// Two Percent Milk — direct-pin + Studio-ready physical layout
+// Two Percent Milk — direct-pin + ZMK Studio physical layout
+// Works out-of-the-box for nice_nano_v2 with two switches on P0.02 and P0.03.
+
 #include <zephyr/dt-bindings/gpio/gpio.h>
 #include <dt-bindings/zmk/matrix_transform.h>
 
 / {
-    /* --- DIRECT-PIN KSCAN ---------------------------------------------- */
+    /* ---------- DIRECT-PIN KSCAN --------------------------------------- */
     kscan0: kscan_0 {
         compatible = "zmk,kscan-gpio-direct";
-        /* TODO: Replace these with your actual pins, one per key.
-         * For nice_nano_v2 (nRF52840) use &gpio0 or &gpio1 and the port pin number.
-         * Standard wiring: GPIO_ACTIVE_LOW | GPIO_PULL_UP
+
+        /* One entry per key, in the logical order you want.
+         * Example below: two keys on P0.02 and P0.03, active-low to GND.
+         * If you change pins, update 'columns', 'map', and 'keys' too.
          */
         input-gpios = <
-            /* &gpio0  2 (GPIO_ACTIVE_LOW | GPIO_PULL_UP) */
-            /* &gpio0  3 (GPIO_ACTIVE_LOW | GPIO_PULL_UP) */
-            /* ... one entry per switch ...               */
+            &gpio0  2 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)   /* Key 0 */
+            &gpio0  3 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)   /* Key 1 */
         >;
     };
 
-    /* --- 1×N MATRIX TRANSFORM ------------------------------------------ */
+    /* ---------- 1×N TRANSFORM (N = number of input-gpios) -------------- */
     matrix_transform0: keymap_transform_0 {
         compatible = "zmk,matrix-transform";
         rows = <1>;
-        columns = <NUMBER_OF_KEYS>;                 /* TODO: set to key count */
-        /* For direct-pin: each pin is “column k” → RC(0, k). Expand to N. */
+        columns = <2>;                          /* <-- set to your key count */
+
+        /* Direct-pin: pin index k == column k → RC(0, k) */
         map = <
-            RC(0, 0) RC(0, 1) RC(0, 2) RC(0, 3)
-            /* RC(0, 4) ... RC(0, N-1) */
+            RC(0, 0) RC(0, 1)
         >;
     };
 
-    /* --- PHYSICAL LAYOUT (Studio) -------------------------------------- */
+    /* ---------- PHYSICAL LAYOUT (used by Studio) ----------------------- */
     physical_layout0: physical_layout_0 {
         compatible = "zmk,physical-layout";
         display-name = "Two Percent Milk (direct)";
+
+        /* Wire kscan + transform (REQUIRED) */
         kscan = <&kscan0>;
         transform = <&matrix_transform0>;
 
-        /* Optional but recommended: add key rectangles for Studio UI.
-         * If you don’t add 'keys', Studio still works but shows a generic grid. */
-        // #include <physical_layouts.dtsi>
-        // keys = < ZMK_KEY(x_mm, y_mm, w_mm, h_mm) ... >;
+        /* Optional but recommended: rectangles for Studio UI (mm).
+         * Tweak x,y,w,h to match your board. Below places two 18×18 “keys”
+         * with 4 mm gap, centered near origin.
+         *
+         * ZMK_KEY(x_mm, y_mm, w_mm, h_mm)
+         */
+        keys = <
+            ZMK_KEY(  0,  0, 18, 18)   /* Key 0 (maps to RC(0,0)) */
+            ZMK_KEY( 22,  0, 18, 18)   /* Key 1 (maps to RC(0,1)) */
+        >;
     };
 
-    /* Select the physical layout for Studio */
-    chosen { zmk,physical-layout = &physical_layout0; }
+    /* ---------- SELECT LAYOUT FOR STUDIO ------------------------------- */
+    chosen {
+        zmk,physical-layout = &physical_layout0;   /* Do NOT set zmk,matrix-transform here */
+    };
 };
