@@ -2,11 +2,11 @@
 
 / {
     chosen {
-        zmk,kscan = &kscan0;
+        zmk,kscan = &kscan;
         zmk,physical-layout = &physical_layout0;
     };
 
-    kscan0: kscan_0 {
+    kscan: kscan {
         compatible = "zmk,kscan-gpio-direct";
         wakeup-source;
 
@@ -20,7 +20,7 @@
         compatible = "zmk,physical-layout";
         display-name = "Default";
         
-        kscan = <&kscan0>;
+        kscan = <&kscan>;
         
         keys  //                     w   h    x    y     rot   rx   ry
             = <&key_physical_attrs 100 100   0    0       0     0    0>
